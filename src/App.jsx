@@ -1,5 +1,6 @@
 import './App.css'
 import Navbar from './components/Navbar'
+import Manager from './components/Manager'
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       </div>
       <div className="relative z-10">
       <Navbar/>
+      <Manager/>
       </div>
     </div>
   )
