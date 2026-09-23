@@ -1,20 +1,47 @@
 import React from 'react'
 
 const Manager = () => {
+  const showPassword = () => {  
+    alert("show the password")
+  }
   return (
     <>
-    <h1 className="text-center"> Password Manager</h1>
-    <p className="text-center font-mono">Your Own Password Manager.</p>
-    <div className="container mx-auto text-white max-w-2xl rounded-2xl  bg-white/5 px-10 py-2 shadow-lg backdrop-blur-xl">
-      <div className="text-white flex flex-col p-2">
-        <input type="text" className="rounded-full px-2 py-0.5 border border-white/20 bg-white/10 text-white placeholder:text-white/50" name="websitename" id="websitename" placeholder="Enter Website Name" />
-      </div>
-        <div className="flex gap-12 p-4 mx-auto">
-          <input type="text" className="rounded-full px-5 py-0.5 border border-white/20 bg-white/10 text-white placeholder:text-white/50" name="Username" id="Username" placeholder="EnterUsername" />
-          <input type="text" className="rounded-full px-5 py-0.5 border border-white/20 bg-white/10 text-white placeholder:text-white/50" name="Password" id="Password" placeholder="Enter Password" />
+      <div className="flex flex-col items-center justify-center">
+        <div className="icon-wrap mt-4 pt-4" role="img" aria-label="Animated password lock icon">
+          <svg viewBox="0 0 128 128" className="lock-icon" xmlns="http://www.w3.org/2000/svg">
+            <path className="lock-shackle" d="M42 52V38c0-15.5 12.5-28 28-28s28 12.5 28 28v14" />
+            <rect className="lock-body" x="28" y="52" width="72" height="54" rx="12" />
+            <circle className="lock-core" cx="64" cy="78" r="8" />
+            <path className="lock-line" d="M64 86v12" />
+          </svg>
         </div>
-        <button className="mx-50 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-white/20 hover:shadow-md">Add Password</button>
-    </div>
+
+        <div className="text-wrap mt-3 text-center">
+          <h1 className="font-bold tracking-tight text-white">Password Manager</h1>
+          <p className="mt-1 font-mono text-sm text-white/70">Your Own Password Manager.</p>
+        </div>
+      </div>
+
+      <div className="container mx-auto mt-6 max-w-2xl rounded-2xl bg-white/5 px-10 py-2 text-white shadow-lg backdrop-blur-xl">
+        <div className="flex flex-col p-2 text-white">
+          <input type="text" className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-white placeholder:text-white/50" name="websitename" id="websitename" placeholder="Enter Website Name" />
+        </div>
+        <div className="mx-auto flex gap-12 p-4">
+          <input type="text" className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50" name="Username" id="Username" placeholder="Enter Username" />
+          <input type="text" className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50" name="Password" id="Password" placeholder="Enter Password" />
+          <span className="text-white/70 absolute right-23 top-16.5 cursor-pointer" onClick={showPassword}>
+          <img className='w-8 h-8 p-1 invert-100' src="public/show.png" alt="show" srcset="" />
+          </span>
+        </div>
+        <button className="mx-auto mt-4 flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-lg hover:shadow-violet-500/20">
+          <span className="add-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
+          Add Password
+        </button>
+      </div>
     </>
   )
 }
