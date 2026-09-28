@@ -3,6 +3,7 @@ import { useRef,useState,useEffect} from 'react'
 
 const Manager = () => {
   const ref = useRef()
+  const passwordRef = useRef()
   const [form, setform] = useState({site:"",username:"",password:""})
   const [passwordArray, setPasswordArray] = useState([])
 
@@ -14,19 +15,28 @@ const Manager = () => {
   }, [])
 
   const showPassword = () => {  
+    passwordRef.current.type="text"
     alert("show the password")
     if( ref.current.src.includes("hide.png")){
       ref.current.src = "show.png"
+      passwordRef.current.type="password"
     }
     else{
       ref.current.src = "hide.png" 
+      passwordRef.current.type="text"
     }
   }
   const savePassword = () => {
+    if (!form.site || !form.username || !form.password) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    const updatedPasswords = [...passwordArray, form]
+    setPasswordArray(updatedPasswords)
+    localStorage.setItem("passwords", JSON.stringify(updatedPasswords))
+    setform({site: "", username: "", password: ""})
     alert("Password Saved")
-    setPasswordArray([...passwordArray,form])
-    localStorage.setItem("passwords",JSON.stringify([...passwordArray,form]))
-    console.log([...passwordArray,form])
   }
   const handleChange = (e) => {
     setform({...form,[e.target.name]:e.target.value})
@@ -55,7 +65,7 @@ const Manager = () => {
         </div>
         <div className="mx-auto flex gap-12 p-4">
           <input value={form.username}  onChange={handleChange} type="text" className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50" name="username" id="Username" placeholder="Enter Username" />
-          <input value={form.password}  onChange={handleChange}type="text" className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50" name="password" id="Password" placeholder="Enter Password" />
+          <input ref={passwordRef} value={form.password}  onChange={handleChange}type="password" className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50" name="password" id="Password" placeholder="Enter Password" />
           <span className="text-white/70 absolute right-23 top-16.5 cursor-pointer" onClick={showPassword}>
           <img ref={ref} className='w-8 h-8 p-1 invert-100' src="show.png" alt="show" srcset="" />
           </span>
@@ -68,6 +78,36 @@ const Manager = () => {
           </span>
           Add Password
         </button>
+      </div>
+
+      <div className='password-table-section mt-10'>
+        <h2 className='text-center text-xl font-semibold text-white'>Your Saved Passwords</h2>
+        <div className='password-table-wrap mx-auto mt-5 max-w-4xl rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_50px_rgba(139,92,246,0.18)] backdrop-blur-xl'>
+          <table className='password-table w-full border-separate border-spacing-y-3 text-left text-sm text-white/85'>
+            <thead>
+              <tr>
+                <th>Website</th>
+                <th>Username</th>
+                <th>Password</th>
+              </tr>
+            </thead>
+            <tbody>
+              {passwordArray.length === 0 ? (
+                <tr>
+                  <td colSpan='3' className='empty-state'>No passwords saved yet.</td>
+                </tr>
+              ) : (
+                passwordArray.map((entry, index) => (
+                  <tr key={`${entry.site}-${entry.username}-${index}`}>
+                    <td><a href={entry.site} target='_blank'>{entry.site}</a></td>
+                    <td>{entry.username}</td>
+                    <td>{entry.password}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   )
