@@ -48,7 +48,7 @@ const Manager = () => {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "light",
+        theme: "dark",
         transition: Bounce,
       });
     } else {
@@ -61,7 +61,7 @@ const Manager = () => {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "light",
+        theme: "dark",
         transition: Bounce,
       });
     }
@@ -88,7 +88,7 @@ const Manager = () => {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "light",
+        theme: "dark",
         transition: Bounce,
       });
     } catch {
@@ -100,7 +100,7 @@ const Manager = () => {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "light",
+        theme: "dark",
         transition: Bounce,
       });
     }
@@ -130,7 +130,7 @@ const Manager = () => {
       pauseOnHover: true,
       draggable: true,
       progress: undefined,
-      theme: "light",
+      theme: "dark",
       transition: Bounce,
     });
   };
@@ -147,95 +147,97 @@ const Manager = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="dark"
         transition="Bounce"
       />
-      <div className="flex flex-col items-center justify-center">
-        <div
-          className="icon-wrap mt-4 pt-4"
-          role="img"
-          aria-label="Animated password lock icon"
-        >
-          <svg
-            viewBox="0 0 128 128"
-            className="lock-icon"
-            xmlns="http://www.w3.org/2000/svg"
+      <main className="manager-page">
+        <header className="manager-header">
+          <div
+            className="icon-wrap"
+            role="img"
+            aria-label="Animated password lock icon"
           >
-            <path
-              className="lock-shackle"
-              d="M42 52V38c0-15.5 12.5-28 28-28s28 12.5 28 28v14"
-            />
-            <rect
-              className="lock-body"
-              x="28"
-              y="52"
-              width="72"
-              height="54"
-              rx="12"
-            />
-            <circle className="lock-core" cx="64" cy="78" r="8" />
-            <path className="lock-line" d="M64 86v12" />
-          </svg>
-        </div>
+            <svg
+              viewBox="0 0 128 128"
+              className="lock-icon"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                className="lock-shackle"
+                d="M42 52V38c0-15.5 12.5-28 28-28s28 12.5 28 28v14"
+              />
+              <rect
+                className="lock-body"
+                x="28"
+                y="52"
+                width="72"
+                height="54"
+                rx="12"
+              />
+              <circle className="lock-core" cx="64" cy="78" r="8" />
+              <path className="lock-line" d="M64 86v12" />
+            </svg>
+          </div>
 
-        <div className="text-wrap mt-3 text-center">
-          <h1 className="font-bold tracking-tight text-white">
-            Password Manager
-          </h1>
-          <p className="mt-1 font-mono text-sm text-white/70">
-            Your Own Password Manager.
-          </p>
-        </div>
-      </div>
+          <div className="text-wrap">
+            <h1>Password Manager</h1>
+            <p>Your Own Password Manager.</p>
+          </div>
+        </header>
 
-      <div className="container mx-auto mt-6 max-w-2xl rounded-2xl bg-white/5 px-10 py-2 text-white shadow-lg backdrop-blur-xl">
-        <div className="flex flex-col p-2 text-white">
-          <input
-            value={form.site}
-            onChange={handleChange}
-            type="text"
-            className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-white placeholder:text-white/50"
-            name="site"
-            id="websitename"
-            placeholder="Enter Website Name"
-          />
-        </div>
-        <div className="mx-auto flex gap-12 p-4">
-          <input
-            value={form.username}
-            onChange={handleChange}
-            type="text"
-            className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50"
-            name="username"
-            id="Username"
-            placeholder="Enter Username"
-          />
-          <input
-            ref={passwordRef}
-            value={form.password}
-            onChange={handleChange}
-            type="password"
-            className="rounded-full border border-white/20 bg-white/10 px-5 py-0.5 text-white placeholder:text-white/50"
-            name="password"
-            id="Password"
-            placeholder="Enter Password"
-          />
-          <span
-            className="text-white/70 absolute right-23 top-16.5 cursor-pointer"
-            onClick={showPassword}
-          >
-            <img
-              ref={ref}
-              className="w-8 h-8 p-1 invert-100"
-              src="show.png"
-              alt="show"
-              srcset=""
+      <section className="password-form" aria-label="Password details">
+        <div className="form-grid">
+          <label className="field">
+            <span>Website</span>
+            <input
+              value={form.site}
+              onChange={handleChange}
+              type="text"
+              className="form-input"
+              name="site"
+              id="websitename"
+              placeholder="Enter Website Name"
             />
-          </span>
+          </label>
+          <label className="field">
+            <span>Username</span>
+            <input
+              value={form.username}
+              onChange={handleChange}
+              type="text"
+              className="form-input"
+              name="username"
+              id="Username"
+              placeholder="Enter Username"
+            />
+          </label>
+          <label className="field">
+            <span>Password</span>
+            <div className="password-input-wrap">
+              <input
+                ref={passwordRef}
+                value={form.password}
+                onChange={handleChange}
+                type="password"
+                className="form-input password-input"
+                name="password"
+                id="Password"
+                placeholder="Enter Password"
+              />
+              <button
+                type="button"
+                className="visibility-button"
+                onClick={showPassword}
+                aria-label="Show or hide password"
+              >
+                <img ref={ref} src="/show.png" alt="" />
+              </button>
+            </div>
+          </label>
         </div>
         <button
           onClick={savePassword}
-          className="mx-auto mt-4 flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-lg hover:shadow-violet-500/20"
+          className="primary-button"
         >
           <span className="add-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -244,14 +246,14 @@ const Manager = () => {
           </span>
           {editingIndex !== null ? "Update Password" : "Add Password"}
         </button>
-      </div>
+      </section>
 
-      <div className="password-table-section mt-10">
-        <h2 className="text-center text-xl font-semibold text-white">
+      <section className="password-table-section">
+        <h2>
           Your Saved Passwords
         </h2>
-        <div className="password-table-wrap mx-auto mt-5 max-w-4xl rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_50px_rgba(139,92,246,0.18)] backdrop-blur-xl">
-          <table className="password-table w-full border-separate border-spacing-y-3 text-left text-sm text-white/85">
+        <div className="password-table-wrap">
+          <table className="password-table">
             <thead>
               <tr>
                 <th>Website</th>
@@ -270,7 +272,7 @@ const Manager = () => {
               ) : (
                 passwordArray.map((entry, index) => (
                   <tr key={`${entry.site}-${entry.username}-${index}`}>
-                    <td>
+                    <td data-label="Website">
                       <div className="value-cell">
                         <a
                           className="value-link"
@@ -299,7 +301,7 @@ const Manager = () => {
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Username">
                       <div className="value-cell">
                         <span className="value-text">{entry.username}</span>
                         <button
@@ -317,7 +319,7 @@ const Manager = () => {
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Password">
                       <div className="value-cell">
                         <span className="value-text">{entry.password}</span>
                         <button
@@ -335,7 +337,7 @@ const Manager = () => {
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <div className="action-cell">
                         <button
                           type="button"
@@ -369,7 +371,8 @@ const Manager = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
+      </main>
     </>
   );
 };
