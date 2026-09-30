@@ -1,11 +1,21 @@
 import { createHash, randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import dns from 'node:dns'
 import express from 'express'
 import { config } from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
 import cookieParser from 'cookie-parser'
 
-config()
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1'])
+} catch {
+  // Use default DNS if unable to set
+}
+
+const envPath = fileURLToPath(new URL('./.env', import.meta.url))
+config({ path: [envPath, path.resolve(process.cwd(), '.env')] })
 
 const app = express()
 const port = Number(process.env.PORT || 3000)
@@ -296,9 +306,9 @@ const start = async () => {
       ])
       databaseStatus = 'connected'
       console.log('MongoDB connected.')
-    } catch {
+    } catch (err) {
       databaseStatus = 'connection-failed'
-      console.error('MongoDB connection failed. Check the local MONGODB_URI and Atlas network access.')
+      console.error('MongoDB connection failed. Check the local MONGODB_URI and Atlas network access.', err?.message || err)
     }
   } else {
     console.warn('MongoDB is not configured. Set MONGODB_URI in backend/.env to enable account routes.')

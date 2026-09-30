@@ -61,19 +61,18 @@ const Manager = ({ account, vaultKey }) => {
 
 
   const showPassword = () => {
-    passwordRef.current.type = "text";
-    alert("show the password");
-    if (ref.current.src.includes("hide.png")) {
-      ref.current.src = "show.png";
-      passwordRef.current.type = "password";
-    } else {
-      ref.current.src = "hide.png";
+    if (!passwordRef.current) return;
+    if (passwordRef.current.type === "password") {
       passwordRef.current.type = "text";
+      if (ref.current) ref.current.src = "/hide.png";
+    } else {
+      passwordRef.current.type = "password";
+      if (ref.current) ref.current.src = "/show.png";
     }
   };
   const savePassword = async () => {
     if (!form.site || !form.username || !form.password) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields", { position: "top-right", autoClose: 3000, theme: "dark", transition: Bounce });
       return;
     }
 
