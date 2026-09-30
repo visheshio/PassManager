@@ -1,7 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  font-family: "Aptos", "Segoe UI", sans-serif;
+  --font-display: "Bahnschrift", "Segoe UI", sans-serif;
+  --font-ui: "Segoe UI", "Aptos", sans-serif;
+  --font-data: "Consolas", "Courier New", monospace;
+  --type-page-title: 2rem;
+  --type-compact-title: 1.75rem;
+  --type-section: 1.25rem;
+  --type-body: 1rem;
+  --type-data: 0.875rem;
+  --type-control: 0.875rem;
+  --type-label: 0.8125rem;
+  --type-meta: 0.75rem;
+
+  font-family: var(--font-ui);
   color: #e6ece7;
   background: #111613;
   color-scheme: dark;
@@ -25,8 +37,8 @@ body,
 
 body {
   min-height: 100vh;
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: var(--type-body);
+  line-height: 1.55;
   letter-spacing: 0;
 }
 

@@ -1,6 +1,15 @@
 import { useRef, useState, useEffect } from "react";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 
+const PAGE_SIZE = 10;
+
+const matchesSearch = (entry, query) => {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return [entry.site, entry.username, entry.password].some((value) =>
+    String(value ?? "").toLocaleLowerCase().includes(normalizedQuery)
+  );
+};
+
 const Manager = () => {
   const ref = useRef();
   const passwordRef = useRef();
@@ -8,6 +17,9 @@ const Manager = () => {
   const [passwordArray, setPasswordArray] = useState([]);
   const [copiedKey, setCopiedKey] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [revealedEntries, setRevealedEntries] = useState(() => new Set());
 
   useEffect(() => {
     let passwords = localStorage.getItem("passwords");
@@ -75,6 +87,18 @@ const Manager = () => {
     setform({ ...form, [e.target.name]: e.target.value });
   };
 
+  const toggleEntryVisibility = (entry) => {
+    setRevealedEntries((currentEntries) => {
+      const nextEntries = new Set(currentEntries);
+      if (nextEntries.has(entry)) {
+        nextEntries.delete(entry);
+      } else {
+        nextEntries.add(entry);
+      }
+      return nextEntries;
+    });
+  };
+
   const copyToClipboard = async (value, key) => {
     try {
       await navigator.clipboard.writeText(value);
@@ -116,6 +140,23 @@ const Manager = () => {
     const updatedPasswords = passwordArray.filter((_, currentIndex) => currentIndex !== index);
     setPasswordArray(updatedPasswords);
     localStorage.setItem("passwords", JSON.stringify(updatedPasswords));
+    setRevealedEntries((currentEntries) => {
+      const nextEntries = new Set(currentEntries);
+      nextEntries.delete(passwordArray[index]);
+      return nextEntries;
+    });
+    setCurrentPage((page) =>
+      Math.min(
+        page,
+        Math.max(
+          1,
+          Math.ceil(
+            updatedPasswords.filter((entry) => matchesSearch(entry, searchTerm)).length /
+              PAGE_SIZE
+          )
+        )
+      )
+    );
 
     if (editingIndex === index) {
       setEditingIndex(null);
@@ -134,6 +175,19 @@ const Manager = () => {
       transition: Bounce,
     });
   };
+
+  const filteredPasswords = passwordArray
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ entry }) => matchesSearch(entry, searchTerm));
+  const pageCount = Math.max(1, Math.ceil(filteredPasswords.length / PAGE_SIZE));
+  const visiblePage = Math.min(currentPage, pageCount);
+  const firstVisibleIndex = (visiblePage - 1) * PAGE_SIZE;
+  const visiblePasswords = filteredPasswords.slice(
+    firstVisibleIndex,
+    firstVisibleIndex + PAGE_SIZE
+  );
+  const firstResult = filteredPasswords.length === 0 ? 0 : firstVisibleIndex + 1;
+  const lastResult = firstVisibleIndex + visiblePasswords.length;
 
   return (
     <>
@@ -252,6 +306,42 @@ const Manager = () => {
         <h2>
           Your Saved Passwords
         </h2>
+        <div className="password-list-controls">
+          <label className="search-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="m16 16 4 4" />
+            </svg>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search site, username, or password"
+              aria-label="Search site, username, or password"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+                aria-label="Clear search"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+              </button>
+            )}
+          </label>
+          <p className="result-count" aria-live="polite">
+            Showing {firstResult}-{lastResult} of {filteredPasswords.length}
+          </p>
+        </div>
         <div className="password-table-wrap">
           <table className="password-table">
             <thead>
@@ -263,14 +353,18 @@ const Manager = () => {
               </tr>
             </thead>
             <tbody>
-              {passwordArray.length === 0 ? (
+              {filteredPasswords.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="empty-state">
-                    No passwords saved yet.
+                    {searchTerm.trim()
+                      ? "No saved credentials match your search."
+                      : "No passwords saved yet."}
                   </td>
                 </tr>
               ) : (
-                passwordArray.map((entry, index) => (
+                visiblePasswords.map(({ entry, index }) => {
+                  const isRevealed = revealedEntries.has(entry);
+                  return (
                   <tr key={`${entry.site}-${entry.username}-${index}`}>
                     <td data-label="Website">
                       <div className="value-cell">
@@ -303,14 +397,19 @@ const Manager = () => {
                     </td>
                     <td data-label="Username">
                       <div className="value-cell">
-                        <span className="value-text">{entry.username}</span>
+                        <span
+                          className={`value-text ${isRevealed ? "" : "masked-value"}`}
+                          aria-label={isRevealed ? entry.username : "Hidden username"}
+                        >
+                          {isRevealed ? entry.username : "••••••••"}
+                        </span>
                         <button
                           type="button"
                           className={`copy-btn ${copiedKey === `username-${index}` ? "copied" : ""}`}
                           onClick={() =>
                             copyToClipboard(entry.username, `username-${index}`)
                           }
-                          aria-label={`Copy username for ${entry.username}`}
+                          aria-label={`Copy ${isRevealed ? entry.username : "hidden username"}`}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <rect x="9" y="9" width="11" height="11" rx="2" />
@@ -321,14 +420,19 @@ const Manager = () => {
                     </td>
                     <td data-label="Password">
                       <div className="value-cell">
-                        <span className="value-text">{entry.password}</span>
+                        <span
+                          className={`value-text ${isRevealed ? "" : "masked-value"}`}
+                          aria-label={isRevealed ? "Password visible" : "Hidden password"}
+                        >
+                          {isRevealed ? entry.password : "••••••••"}
+                        </span>
                         <button
                           type="button"
                           className={`copy-btn ${copiedKey === `password-${index}` ? "copied" : ""}`}
                           onClick={() =>
                             copyToClipboard(entry.password, `password-${index}`)
                           }
-                          aria-label={`Copy password for ${entry.username}`}
+                          aria-label={`Copy ${isRevealed ? "password" : "hidden password"} for ${isRevealed ? entry.username : "this entry"}`}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <rect x="9" y="9" width="11" height="11" rx="2" />
@@ -339,6 +443,27 @@ const Manager = () => {
                     </td>
                     <td data-label="Actions">
                       <div className="action-cell">
+                        <button
+                          type="button"
+                          className="action-btn visibility-row-btn"
+                          onClick={() => toggleEntryVisibility(entry)}
+                          aria-label={`${isRevealed ? "Hide" : "Show"} username and password for ${entry.site}`}
+                          aria-pressed={isRevealed}
+                        >
+                          {isRevealed ? (
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="m3 3 18 18" />
+                              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                              <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.2 0 9.5 7 9.5 7a16 16 0 0 1-3.1 3.9" />
+                              <path d="M6.2 6.2C3.8 7.9 2.5 12 2.5 12s3.3 7 9.5 7c.8 0 1.6-.1 2.3-.4" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M2.5 12s3.3-7 9.5-7 9.5 7 9.5 7-3.3 7-9.5 7-9.5-7-9.5-7Z" />
+                              <circle cx="12" cy="12" r="2.5" />
+                            </svg>
+                          )}
+                        </button>
                         <button
                           type="button"
                           className="action-btn edit-btn"
@@ -366,11 +491,33 @@ const Manager = () => {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+        {pageCount > 1 && (
+          <nav className="pagination" aria-label="Saved credential pages">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(visiblePage - 1)}
+              disabled={visiblePage === 1}
+            >
+              Previous
+            </button>
+            <span aria-live="polite">
+              Page {visiblePage} of {pageCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage(visiblePage + 1)}
+              disabled={visiblePage === pageCount}
+            >
+              Next
+            </button>
+          </nav>
+        )}
       </section>
       </main>
     </>
