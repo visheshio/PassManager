@@ -1,18 +1,27 @@
-const Navbar = () => {
+const Navbar = ({ path, account, onNavigate, onSignOut }) => {
+  const navigate = (event, target) => {
+    event.preventDefault()
+    onNavigate(target)
+  }
+
   return (
     <nav className="app-nav" aria-label="Main navigation">
-      <div className="logo">
-        <img src="/favicon.svg" alt="PassManager" />
-      </div>
+      <a className="logo" href="/home" onClick={(event) => navigate(event, '/home')} aria-label="PASSVAULT home">
+        <img src="/favicon.svg" alt="" />
+      </a>
       <ul className="nav-links">
         <li>
-          <a href="/home">Home</a>
+          <a className={path === '/home' || path === '/' ? 'nav-active' : ''} href="/home" onClick={(event) => navigate(event, '/home')}>Home</a>
         </li>
         <li>
-          <a href="/about">About</a>
+          <a className={path === '/about' ? 'nav-active' : ''} href="/about" onClick={(event) => navigate(event, '/about')}>About</a>
         </li>
         <li>
-          <a className="nav-login" href="/login">Login</a>
+          {account ? (
+            <button className="nav-login" type="button" onClick={onSignOut}>Sign out</button>
+          ) : (
+            <a className={`nav-login ${path === '/login' ? 'nav-active' : ''}`} href="/login" onClick={(event) => navigate(event, '/login')}>Login</a>
+          )}
         </li>
       </ul>
     </nav>

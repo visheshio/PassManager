@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { ToastContainer, toast, Bounce } from "react-toastify";
+import { decryptVaultEntry, encryptVaultEntry } from "../vaultCrypto";
 
 const PAGE_SIZE = 10;
 
@@ -10,23 +11,53 @@ const matchesSearch = (entry, query) => {
   );
 };
 
-const Manager = () => {
+const Manager = ({ account, vaultKey }) => {
   const ref = useRef();
   const passwordRef = useRef();
   const [form, setform] = useState({ site: "", username: "", password: "" });
-  const [passwordArray, setPasswordArray] = useState([]);
+  const [passwordArray, setPasswordArray] = useState(() => {
+    if (account && vaultKey) return [];
+    try {
+      const passwords = localStorage.getItem("passwords");
+      return passwords ? JSON.parse(passwords) : [];
+    } catch {
+      return [];
+    }
+  });
   const [copiedKey, setCopiedKey] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [revealedEntries, setRevealedEntries] = useState(() => new Set());
+  const [vaultLoading, setVaultLoading] = useState(Boolean(account && vaultKey));
+  const [vaultError, setVaultError] = useState("");
+  const accountId = account?.id;
 
   useEffect(() => {
-    let passwords = localStorage.getItem("passwords");
-    if (passwords) {
-      setPasswordArray(JSON.parse(passwords));
-    }
-  }, []);
+    if (!accountId || !vaultKey) return;
+    let active = true;
+    const loadVault = async () => {
+      try {
+        const response = await fetch("/api/vault");
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.message || "Could not load the account vault.");
+        const decryptedEntries = await Promise.all(
+          result.records.map(async (record) => ({
+            ...(await decryptVaultEntry(record, vaultKey)),
+            id: record.id,
+          }))
+        );
+        if (active) setPasswordArray(decryptedEntries);
+      } catch (error) {
+        if (active) setVaultError(error.message || "Could not unlock the account vault.");
+      } finally {
+        if (active) setVaultLoading(false);
+      }
+    };
+
+    loadVault();
+    return () => { active = false; };
+  }, [accountId, vaultKey]);
 
 
   const showPassword = () => {
@@ -40,13 +71,51 @@ const Manager = () => {
       passwordRef.current.type = "text";
     }
   };
-  const savePassword = () => {
+  const savePassword = async () => {
     if (!form.site || !form.username || !form.password) {
       alert("Please fill in all fields");
       return;
     }
 
     let updatedPasswords;
+
+    if (account && vaultKey) {
+      try {
+        const encryptedRecord = await encryptVaultEntry(form, vaultKey);
+        if (editingIndex !== null) {
+          const existingEntry = passwordArray[editingIndex];
+          const response = await fetch(`/api/vault/${existingEntry.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(encryptedRecord),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.message || "Could not update this entry.");
+          updatedPasswords = passwordArray.map((entry, index) =>
+            index === editingIndex ? { ...form, id: existingEntry.id } : entry
+          );
+          toast.info("Password updated", { position: "top-right", autoClose: 3000, theme: "dark", transition: Bounce });
+        } else {
+          const response = await fetch("/api/vault", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(encryptedRecord),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.message || "Could not save this entry.");
+          updatedPasswords = [...passwordArray, { ...form, id: result.id }];
+          toast.success("Password saved", { position: "top-right", autoClose: 3000, theme: "dark", transition: Bounce });
+        }
+      } catch (error) {
+        toast.error(error.message || "Could not save the encrypted vault entry.", { position: "top-right", autoClose: 5000, theme: "dark", transition: Bounce });
+        return;
+      }
+
+      setPasswordArray(updatedPasswords);
+      setform({ site: "", username: "", password: "" });
+      setEditingIndex(null);
+      return;
+    }
 
     if (editingIndex !== null) {
       updatedPasswords = passwordArray.map((entry, index) =>
@@ -136,10 +205,22 @@ const Manager = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (index) => {
+    const entryToDelete = passwordArray[index];
+    if (account && vaultKey) {
+      try {
+        const response = await fetch(`/api/vault/${entryToDelete.id}`, { method: "DELETE" });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.message || "Could not delete this entry.");
+      } catch (error) {
+        toast.error(error.message || "Could not delete this vault entry.", { position: "top-right", autoClose: 5000, theme: "dark", transition: Bounce });
+        return;
+      }
+    }
+
     const updatedPasswords = passwordArray.filter((_, currentIndex) => currentIndex !== index);
     setPasswordArray(updatedPasswords);
-    localStorage.setItem("passwords", JSON.stringify(updatedPasswords));
+    if (!account || !vaultKey) localStorage.setItem("passwords", JSON.stringify(updatedPasswords));
     setRevealedEntries((currentEntries) => {
       const nextEntries = new Set(currentEntries);
       nextEntries.delete(passwordArray[index]);
@@ -304,8 +385,11 @@ const Manager = () => {
 
       <section className="password-table-section">
         <h2>
-          Your Saved Passwords
+          {account ? "Your Encrypted Account Vault" : "Your Saved Passwords"}
         </h2>
+        {account && <p className="account-vault-label">Signed in as {account.email} · encrypted before storage</p>}
+        {vaultLoading && <p className="vault-status" role="status">Decrypting your vault…</p>}
+        {vaultError && <p className="vault-error" role="alert">{vaultError}</p>}
         <div className="password-list-controls">
           <label className="search-control">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -353,7 +437,11 @@ const Manager = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPasswords.length === 0 ? (
+              {vaultLoading ? (
+                <tr><td colSpan="4" className="empty-state">Decrypting your account vault…</td></tr>
+              ) : vaultError ? (
+                <tr><td colSpan="4" className="empty-state">Your encrypted vault could not be opened. Sign out and try again.</td></tr>
+              ) : filteredPasswords.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="empty-state">
                     {searchTerm.trim()

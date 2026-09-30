@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 node_modules/
 .github
+
+# Local service credentials
+backend/.env
+backend/.env.*
+!backend/.env.example
