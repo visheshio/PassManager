@@ -274,6 +274,11 @@
   stroke-width: 2.5;
 }
 
+.primary-button:hover .add-icon svg,
+.primary-button:focus-visible .add-icon svg {
+  animation: addIconTurn 380ms ease-out;
+}
+
 .password-table-section {
   margin-top: 52px;
   padding-bottom: 16px;
@@ -391,10 +396,19 @@
   stroke-width: 2;
 }
 
+.copy-btn:hover svg,
+.copy-btn:focus-visible svg {
+  animation: copyIconLift 320ms ease-out;
+}
+
 .copy-btn.copied {
   color: var(--accent-strong);
   border-color: rgba(169, 228, 189, 0.55);
   background: rgba(169, 228, 189, 0.1);
+}
+
+.copy-btn.copied svg {
+  animation: copyIconConfirm 420ms ease-out;
 }
 
 .action-cell {
@@ -409,10 +423,20 @@
   border-color: rgba(169, 228, 189, 0.55);
 }
 
+.edit-btn:hover svg,
+.edit-btn:focus-visible svg {
+  animation: editIconTilt 300ms ease-out;
+}
+
 .delete-btn:hover {
   color: var(--danger);
   border-color: rgba(255, 146, 138, 0.55);
   background: rgba(255, 146, 138, 0.08);
+}
+
+.delete-btn:hover svg,
+.delete-btn:focus-visible svg {
+  animation: deleteIconNudge 360ms ease-in-out;
 }
 
 .Toastify__toast-theme--dark {
@@ -463,6 +487,63 @@
   }
   50% {
     transform: translateY(-3px);
+  }
+}
+
+@keyframes addIconTurn {
+  0% {
+    transform: rotate(0) scale(0.9);
+  }
+  65% {
+    transform: rotate(90deg) scale(1.15);
+  }
+  100% {
+    transform: rotate(90deg) scale(1);
+  }
+}
+
+@keyframes copyIconLift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.08);
+  }
+}
+
+@keyframes copyIconConfirm {
+  0% {
+    transform: scale(0.75);
+  }
+  65% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes editIconTilt {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  55% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+}
+
+@keyframes deleteIconNudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-1.5px) rotate(-5deg);
+  }
+  70% {
+    transform: translateX(1.5px) rotate(5deg);
   }
 }
 
