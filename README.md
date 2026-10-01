@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="#demo-video">Demo Video</a> •
   <a href="#features">Features</a> •
   <a href="#screenshots">Screenshots</a> •
   <a href="#architecture">Architecture</a> •
@@ -27,6 +28,22 @@
   <img src="https://img.shields.io/badge/MongoDB-Atlas-47a248?logo=mongodb&logoColor=white" alt="MongoDB Atlas" />
   <img src="https://img.shields.io/badge/Encryption-AES--256--GCM-2ea44f" alt="AES-256-GCM" />
   <img src="https://img.shields.io/badge/License-ISC-blue" alt="License ISC" />
+</p>
+
+---
+
+## 🎬 Demo Video
+
+<p align="center">
+  <video src="docs/videos/passvault-demo.mp4" poster="docs/videos/passvault-demo-poster.jpg" width="100%" controls>
+    <a href="docs/videos/passvault-demo.mp4">
+      <img src="docs/videos/passvault-demo-poster.jpg" alt="PassVault Launch Demo Video" width="100%" />
+    </a>
+  </video>
+</p>
+
+<p align="center">
+  <em>▶️ <strong>Watch the cinematic launch walkthrough (19s)</strong>: Client-side AES-256-GCM cryptography, interactive live vault, password strength analysis, and zero-knowledge synchronization. <a href="docs/videos/passvault-demo.mp4">Direct Video Link (MP4)</a></em>
 </p>
 
 ---
