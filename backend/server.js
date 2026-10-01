@@ -44,14 +44,55 @@ app.use((request, response, next) => {
 
 const sendError = (response, status, message) => response.status(status).json({ message })
 
-const requireDatabase = (_request, response, next) => {
+let clientPromise = null
+
+const connectDatabase = async () => {
+  if (database) return database
+  if (!process.env.MONGODB_URI) return null
+  if (!clientPromise) {
+    const client = new MongoClient(process.env.MONGODB_URI)
+    clientPromise = client.connect().then(async (connectedClient) => {
+      const db = connectedClient.db(databaseName)
+      await Promise.all([
+        db.collection('users').createIndex({ email: 1 }, { unique: true }),
+        db.collection('sessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+        db.collection('vaultRecords').createIndex({ userId: 1, createdAt: 1 }),
+      ])
+      database = db
+      databaseStatus = 'connected'
+      console.log('MongoDB connected.')
+      return db
+    }).catch((err) => {
+      clientPromise = null
+      databaseStatus = 'connection-failed'
+      console.error('MongoDB connection failed:', err?.message || err)
+      throw err
+    })
+  }
+  return clientPromise
+}
+
+if (process.env.MONGODB_URI) {
+  connectDatabase().catch(() => {})
+}
+
+const requireDatabase = async (_request, response, next) => {
+  if (!database && process.env.MONGODB_URI) {
+    try {
+      await connectDatabase()
+    } catch {
+      // Handled by subsequent check
+    }
+  }
   if (!database) return sendError(response, 503, 'Account service is unavailable. Configure MongoDB Atlas and restart the backend.')
   next()
 }
 
 const requireSameOrigin = (request, response, next) => {
   const origin = request.get('origin')
-  if (!origin || !allowedOrigins.has(origin)) return sendError(response, 403, 'Request origin is not allowed.')
+  const host = request.get('host')
+  const isSameHost = host && (origin === `https://${host}` || origin === `http://${host}`)
+  if (!origin || (!allowedOrigins.has(origin) && !isSameHost)) return sendError(response, 403, 'Request origin is not allowed.')
   next()
 }
 
@@ -167,7 +208,12 @@ const validEncryptedRecord = (record) => record &&
   validBase64(record.ciphertext) &&
   record.version === 1
 
-app.get('/api/health', (_request, response) => {
+app.get('/api/health', async (_request, response) => {
+  if (!database && process.env.MONGODB_URI) {
+    try {
+      await connectDatabase()
+    } catch {}
+  }
   response.status(database ? 200 : 503).json({ status: database ? 'ready' : 'unavailable', database: databaseStatus, startedAt: appStartedAt.toISOString() })
 })
 
@@ -195,13 +241,21 @@ app.post('/api/auth/register', requireSameOrigin, limitAttempts(), requireDataba
   }
 })
 
+const getDummyPasswordHash = async () => {
+  if (!dummyPasswordHash) {
+    dummyPasswordHash = await hashPassword(randomBytes(32).toString('base64'))
+  }
+  return dummyPasswordHash
+}
+
 app.post('/api/auth/signin', requireSameOrigin, limitAttempts(), requireDatabase, async (request, response) => {
   const email = typeof request.body?.email === 'string' ? request.body.email.trim().toLowerCase() : ''
   const { password } = request.body || {}
   if (!validEmail(email) || typeof password !== 'string' || password.length > 1024) return sendError(response, 400, 'Enter a valid email and password.')
   try {
     const user = await database.collection('users').findOne({ email })
-    const passwordMatches = await verifyPassword(password, user?.passwordHash || dummyPasswordHash)
+    const dummyHash = await getDummyPasswordHash()
+    const passwordMatches = await verifyPassword(password, user?.passwordHash || dummyHash)
     if (!user || !passwordMatches) return sendError(response, 401, 'Email or password is incorrect.')
     await startSession(user, response)
     response.json({ user: publicUser(user) })
@@ -293,21 +347,11 @@ app.use((error, _request, response, _next) => {
 })
 
 const start = async () => {
-  dummyPasswordHash = await hashPassword(randomBytes(32).toString('base64'))
+  await getDummyPasswordHash()
   if (process.env.MONGODB_URI) {
     try {
-      const client = new MongoClient(process.env.MONGODB_URI)
-      await client.connect()
-      database = client.db(databaseName)
-      await Promise.all([
-        database.collection('users').createIndex({ email: 1 }, { unique: true }),
-        database.collection('sessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-        database.collection('vaultRecords').createIndex({ userId: 1, createdAt: 1 }),
-      ])
-      databaseStatus = 'connected'
-      console.log('MongoDB connected.')
+      await connectDatabase()
     } catch (err) {
-      databaseStatus = 'connection-failed'
       console.error('MongoDB connection failed. Check the local MONGODB_URI and Atlas network access.', err?.message || err)
     }
   } else {
@@ -317,4 +361,8 @@ const start = async () => {
   app.listen(port, () => console.log(`PASSVAULT API listening on http://localhost:${port}`))
 }
 
-start()
+export default app
+
+if (!process.env.VERCEL) {
+  start()
+}

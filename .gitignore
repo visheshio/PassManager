@@ -30,3 +30,4 @@ backend/.env
 backend/.env.*
 !backend/.env.example
 .agents
+.vercel
