@@ -89,11 +89,11 @@ const AuthPage = ({ existingUser, onAuthenticated, onNavigate }) => {
         <form className="auth-form" onSubmit={submit}>
           <label className="field">
             <span>Email address</span>
-            <input type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" readOnly={isUnlock} />
+            <input className="form-input" type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" readOnly={isUnlock} />
           </label>
           <label className="field">
             <span>Account password</span>
-            <input type="password" name="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} minLength={12} maxLength={1024} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' ? 'At least 12 characters' : 'Enter your password'} />
+            <input className="form-input" type="password" name="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} minLength={12} maxLength={1024} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' ? 'At least 12 characters' : 'Enter your password'} />
           </label>
           {mode === 'signup' && !isUnlock && (
             <label className="field">
