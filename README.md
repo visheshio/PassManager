@@ -35,11 +35,11 @@
 ## 🎬 Demo Video
 
 <p align="center">
-  <video src="docs/videos/passvault-demo.mp4" poster="docs/videos/passvault-demo-poster.jpg" width="100%" controls>
-    <a href="docs/videos/passvault-demo.mp4">
-      <img src="docs/videos/passvault-demo-poster.jpg" alt="PassVault Launch Demo Video" width="100%" />
-    </a>
-  </video>
+  <a href="docs/videos/passvault-demo.mp4">
+    <img src="docs/videos/passvault-demo-poster.jpg" alt="PassVault Launch Demo Video" width="100%" />
+  </a>
+  <br />
+  <a href="docs/videos/passvault-demo.mp4">▶️ <strong>Click to play demo video (MP4)</strong></a>
 </p>
 
 <p align="center">
